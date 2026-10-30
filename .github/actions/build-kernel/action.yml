@@ -2482,7 +2482,8 @@ runs:
         ccache -s | head -n 20
         echo "============================================"
         
-        # --- custom: disable /proc/config.gz so detectors cannot read CONFIG_KSU ---
+
+# custom: remove /proc/config.gz so detectors cannot read CONFIG_KSU
 echo "CONFIG_IKCONFIG=n" >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig"
 echo "CONFIG_IKCONFIG_PROC=n" >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig"
 
