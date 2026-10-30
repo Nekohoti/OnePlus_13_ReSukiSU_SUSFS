@@ -2385,7 +2385,7 @@ runs:
           OPTIONS+=("CONFIG_IP6_NF_NAT")
         fi
         
-        CONFIG_STRING="${OPTIONS[*]}"
+        CONFIG_STRING="${OPTIONS[*]} CONFIG_KSU CONFIG_KSU_SUSFS"
         echo "CONFIG_FAKE_DISABLE=${CONFIG_STRING}" >> $GITHUB_ENV
 
     - name: Build Kernel
