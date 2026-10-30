@@ -2482,7 +2482,11 @@ runs:
         ccache -s | head -n 20
         echo "============================================"
         
-        make LD="$COMMON_KERNEL_FOLDER/ld-wrapper" HOSTLD="$COMMON_KERNEL_FOLDER/ld-wrapper" O="$OUT" gki_defconfig
+        # --- custom: disable /proc/config.gz so detectors cannot read CONFIG_KSU ---
+echo "CONFIG_IKCONFIG=n" >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig"
+echo "CONFIG_IKCONFIG_PROC=n" >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig"
+
+make LD="$COMMON_KERNEL_FOLDER/ld-wrapper" HOSTLD="$COMMON_KERNEL_FOLDER/ld-wrapper" O="$OUT" gki_defconfig
         
         LOCAL_LOCALVERSION="${CUSTOM_LOCALVERSION:--OP-RESUKISU}"
         if [ -n "${LOCAL_LOCALVERSION:-}" ]; then
