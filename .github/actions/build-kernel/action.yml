@@ -12,6 +12,7 @@ inputs:
     options:
       - KSU
       - ReSukiSU
+      - SukiSU
   ksu_branch_or_hash:
     description: 'KSU branch or commit hash (empty = auto-detect by ksu_type)'
     required: false
@@ -1125,6 +1126,62 @@ runs:
         
         echo "ReSukiSU Version: $KSU_VERSION"
         echo "✅ ReSukiSU added (commit: ${KSU_COMMIT_SHA:0:8})"
+        echo "::endgroup::"
+
+    - name: Add SukiSU (SukiSU-Ultra upstream)
+      shell: bash
+      if: ${{ inputs.ksu_type == 'SukiSU' }}
+      run: |
+        set -euo pipefail
+        echo "::group::Add SukiSU"
+        cd "$KERNEL_PLATFORM_FOLDER"
+        echo "Adding SukiSU..."
+        
+        SUKISU_REF="${{ inputs.ksu_branch_or_hash }}"
+        if [ -z "$SUKISU_REF" ]; then
+          SUKISU_REF="main"
+          echo "Using latest SukiSU CI (main): $SUKISU_REF"
+        else
+          echo "Using requested SukiSU ref: $SUKISU_REF"
+        fi
+        SUKISU_SETUP="$(mktemp)"
+        trap 'rm -f "$SUKISU_SETUP"' EXIT
+        if ! curl --fail --location --proto '=https' -LsS \
+          --connect-timeout 20 --max-time 180 \
+          --retry 5 --retry-all-errors --retry-delay 5 \
+          "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/$SUKISU_REF/kernel/setup.sh" \
+          -o "$SUKISU_SETUP"; then
+          echo "::error::Failed to download SukiSU setup.sh after retries"
+          exit 1
+        fi
+        test -s "$SUKISU_SETUP" || {
+          echo "::error::Downloaded SukiSU setup.sh is empty"
+          exit 1
+        }
+        bash "$SUKISU_SETUP" "$SUKISU_REF"
+        
+        cd KernelSU
+        
+        BASE_VERSION=40000
+        KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" $BASE_VERSION)
+        
+        KSU_COMMIT_SHA=$(git rev-parse HEAD)
+        if [[ "$SUKISU_REF" =~ ^[0-9a-f]{40}$ ]]; then
+          [[ "$KSU_COMMIT_SHA" == "$SUKISU_REF" ]] || {
+            echo "::error::SukiSU checkout $KSU_COMMIT_SHA differs from requested immutable ref $SUKISU_REF"
+            exit 1
+          }
+        fi
+        echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+        
+        cd ..
+        
+        echo "SukiSU" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "$KSU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+        
+        echo "SukiSU Version: $KSU_VERSION"
+        echo "✅ SukiSU added (commit: ${KSU_COMMIT_SHA:0:8})"
         echo "::endgroup::"
 
     - name: Apply SUSFS Patches
