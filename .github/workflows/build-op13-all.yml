@@ -213,9 +213,9 @@ jobs:
         uses: ./.github/actions/build-kernel
         with:
           op_config_json: ${{ steps.config.outputs.json }}
-          ksu_type: SukiSU
-          ksu_branch_or_hash: 'builtin'
-          susfs_commit_hash_or_branch: 'gki-android15-6.6-dev'
+          ksu_type: ReSukiSU
+          ksu_branch_or_hash: ${{ steps.config.outputs.resukisu_sha }}
+          susfs_commit_hash_or_branch: ${{ steps.config.outputs.susfs_sha }}
           optimize_level: ${{ inputs.optimize_level || 'O2' }}
           clean: ${{ inputs.clean_build || false }}
           debug: ${{ inputs.debug || false }}
