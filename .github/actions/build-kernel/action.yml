@@ -2437,13 +2437,15 @@ runs:
         fi
         echo "== filechk_cat now =="
         grep -n '^filechk_cat' kernel/Makefile || true
-        # 新版宿主 clang 导致 libbpf 编译报错：补上强制类型转换
-        LB=$(find . -path '*resolve_btfids/libbpf/libbpf.c' 2>/dev/null | head -n1)
-        if [ -n "$LB" ]; then
-          sed -i "s|next_path = strchr(s, ':');|next_path = (char *)strchr(s, ':');|" "$LB"
-          echo "patched libbpf: $LB"
-          grep -n "next_path = " "$LB" | head -3 || true
-        fi
+        # 新版宿主 clang 导致 libbpf 编译报错：全树搜索并补上强制类型转换
+        CNT=0
+        for f in $(grep -rl "next_path = strchr" "$KERNEL_PLATFORM_FOLDER" 2>/dev/null | head -10); do
+          sed -i "s|next_path = strchr(s, ':')|next_path = (char *)strchr(s, ':')|g" "$f"
+          CNT=$((CNT+1))
+          echo "patched libbpf: $f"
+        done
+        echo "libbpf patched files: $CNT"
+        export HOSTCFLAGS="${HOSTCFLAGS:-} -Wno-error=incompatible-pointer-types-discards-qualifiers"
         
         OPTIONS=()
         
