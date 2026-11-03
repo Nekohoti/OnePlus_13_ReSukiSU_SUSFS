@@ -2431,6 +2431,12 @@ runs:
         echo "Apply Fake config.gz patch"
         cd "$COMMON_KERNEL_FOLDER"
         patch -p1 < "$KERNEL_PATCHES_FOLDER/common/fake_config.patch"
+        # 彻底删除 config.gz 中所有 CONFIG_KSU 行（而非仅改成 is not set）
+        if grep -q '^filechk_cat = cat ' kernel/Makefile; then
+          sed -i 's|^filechk_cat = cat \$<|filechk_cat = grep -v "CONFIG_KSU" $<|' kernel/Makefile
+        fi
+        echo "== filechk_cat now =="
+        grep -n '^filechk_cat' kernel/Makefile || true
         
         OPTIONS=()
         
