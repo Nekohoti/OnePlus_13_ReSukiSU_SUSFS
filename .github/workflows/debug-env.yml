@@ -1,0 +1,18 @@
+name: Debug Env
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe
+        run: |
+          cat /etc/os-release
+          echo "--- apt-cache policy ---"
+          apt-cache policy libxml2 libxml2t64 libxml2-16 libxml2-dev liblz4-tool lz4 2>&1 | head -60
+          echo "--- search ---"
+          apt-cache search libxml2 2>&1 | head -20
+          echo "--- existing libs ---"
+          find / -name "libxml2.so*" 2>/dev/null | head -10
+          echo "--- lld ---"
+          which ld.lld; ld.lld --version 2>&1 | head -2
